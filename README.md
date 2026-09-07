@@ -17,6 +17,7 @@ graph TD
     Factory --> Orlando["OrlandoStrategy (Fast-Kart JSON)"]
     Factory --> Ringer["RingerStrategy (Matat Mini-Coupon)"]
     Factory --> Spring["SpringStrategy (WooCommerce Cloudflare)"]
+    Factory --> Bobot["BobotStrategy (WooCommerce HTML)"]
     
     WLE --> Seeds["High-Probability Baseline Seeds"]
     WLE --> SC["SimplyCodes Top 20 Empirical Dataset (54k+ Stores)"]
@@ -40,30 +41,31 @@ graph TD
 | [`strategies/orlando.py`](strategies/orlando.py) | Orlando Implementation | Fast-Kart JSON endpoint (`fkcart_apply_coupon`), luxury perfumes/cosmetics vocabulary, confirmed live findings (`new30`, `welcome5`). |
 | [`strategies/ringer.py`](strategies/ringer.py) | Ringers Implementation | WordPress `admin-ajax.php` (`matat_mini_coupon_code`), handles `'0'` active cart sessions, luxury watches/jewelry tokens. |
 | [`strategies/spring.py`](strategies/spring.py) | Spring (Avivs) Implementation | WooCommerce HTML AJAX protected by Cloudflare, fashion/footwear tokens (`spring`, `avivs`), confirmed findings (`spring10`, `spring15`). |
-| [`strategies/__init__.py`](strategies/__init__.py) | Strategy Registry & Factory | Singleton strategy registry providing `get_retailer_strategy(name)` with alias mapping (`ringer` -> `ringers`, `avivs` -> `spring`). |
+| [`strategies/bobot.py`](strategies/bobot.py) | Bobot Israel Implementation | WooCommerce HTML AJAX endpoint (`apply_coupon`), cleaning appliances / robot vacuums tokens (`bobot`, `corrin`), confirmed live findings (`corrin`, `corrin20`, `corrin50`). |
+| [`strategies/__init__.py`](strategies/__init__.py) | Strategy Registry & Factory | Singleton strategy registry providing `get_retailer_strategy(name)` with alias mapping (`ringer` -> `ringers`, `avivs` -> `spring`, `bobot-israel` -> `bobot`). |
 | [`engine.py`](engine.py) | Network & Probing Core | Asynchronous `curl_cffi` session impersonating Chrome 124 TLS/HTTP2 stack, micro-jitter delays, retry loops, and cart stacking tests. |
 | [`wordlist.py`](wordlist.py) | Permutation Engine | Hierarchical permutation generator synthesizing SimplyCodes empirical dataset, holiday calendars, Israeli demographics, and brand vectors into 8,000+ candidates. |
 | [`nightly.py`](nightly.py) | Nightly Pipeline Orchestrator | Multi-retailer multi-hour orchestrator with proxy rotation, AIMD adaptive rate limiting, circuit breaker, SQLite WAL checkpoint store, and executive report generator. |
 | [`main.py`](main.py) | CLI Entry Point | Command-line parsing for single-target runs and `nightly` pipeline orchestrator. |
-| [`test_retailers.py`](test_retailers.py) | Retailer Strategy Test Suite | Unit tests verifying strategy creation, payload encoding, response triaging, wordlist deduplication, and priority ordering. |
+| [`test_retailers.py`](test_retailers.py) | Retailer Strategy Test Suite | Unit tests verifying strategy creation, payload encoding, response triaging, wordlist deduplication, and priority ordering across all 5 target platforms. |
 | [`test_nightly.py`](test_nightly.py) | Nightly Pipeline Test Suite | Unit tests verifying proxy rotation, AIMD rate limiting, circuit breaker fault isolation, and SQLite checkpointing. |
 
 ---
 
 ## 2. Retailer Profiles & Technical Deep-Dive
 
-| Feature | Talron Strategy (`--retailer talron`) | Orlando Strategy (`--retailer orlando`) | Ringer Strategy (`--retailer ringer` / `ringers`) | Spring Strategy (`--retailer spring` / `avivs`) |
-|---|---|---|---|---|
-| **Domain** | `tal-ron.co.il` | `orlando.co.il` | `ringers.co.il` | `avivs.co.il` |
-| **Endpoint URL** | `https://tal-ron.co.il/?wc-ajax=apply_coupon` | `https://orlando.co.il/?wc-ajax=fkcart_apply_coupon` | `https://www.ringers.co.il/wp-admin/admin-ajax.php` | `https://avivs.co.il/?wc-ajax=apply_coupon` |
-| **Architecture** | Standard WooCommerce AJAX | Fast-Kart (`fkcart`) JSON Plugin | Matat Mini-Coupon WordPress AJAX | WooCommerce AJAX (Cloudflare Protected) |
-| **HTTP Method** | `POST` | `POST` | `POST` | `POST` |
-| **Payload Schema** | `{"security": nonce, "coupon_code": code, "billing_email": ""}` | `{"discount_code": code, "nonce": nonce}` | `{"action": "matat_mini_coupon_code", "coupon_code": code, "security": nonce}` | `{"security": nonce, "coupon_code": code, "billing_email": ""}` |
-| **Response Format** | HTML (`.woocommerce-message`, `.woocommerce-error`) | JSON (`{"status": true, "code": 200, ...}`) | JSON or raw literal string `'0'` | HTML (`.woocommerce-message`, `.woocommerce-error`) |
-| **Response Quirks** | Returns HTTP 200 with HTML message on both success and error | Returns HTTP 200 for applied, HTTP 400 for invalid/already applied | Returns `'0'` when coupon is already active in user session cart | Returns HTTP 200 with `הקופון פג תוקף` for expired database entries |
-| **Baseline Test Codes** | `["Welcome5", "welcome7"]` | `["new30", "welcome5", "dasd"]` | `["welcome5", "dasd"]` | `["spring10", "dasd"]` |
-| **Verified Live Hits** | `talron50`, `welcome5` | `new30` (30% off), `welcome5` (5% off) | `welcome5` (Active in cart) | `spring10`, `spring15` (Expired database hits) |
-| **Niche Vocabulary** | Automotive, mechanics, garage tools | Perfumes, luxury scents, cosmetics | Luxury watches, jewelry, rings | Fashion, footwear, shoes, handbags |
+| Feature | Talron Strategy (`--retailer talron`) | Orlando Strategy (`--retailer orlando`) | Ringer Strategy (`--retailer ringer` / `ringers`) | Spring Strategy (`--retailer spring` / `avivs`) | Bobot Strategy (`--retailer bobot`) |
+|---|---|---|---|---|---|
+| **Domain** | `tal-ron.co.il` | `orlando.co.il` | `ringers.co.il` | `avivs.co.il` | `bobot-israel.com` |
+| **Endpoint URL** | `https://tal-ron.co.il/?wc-ajax=apply_coupon` | `https://orlando.co.il/?wc-ajax=fkcart_apply_coupon` | `https://www.ringers.co.il/wp-admin/admin-ajax.php` | `https://avivs.co.il/?wc-ajax=apply_coupon` | `https://bobot-israel.com/?wc-ajax=apply_coupon` |
+| **Architecture** | Standard WooCommerce AJAX | Fast-Kart (`fkcart`) JSON Plugin | Matat Mini-Coupon WordPress AJAX | WooCommerce AJAX (Cloudflare Protected) | Standard WooCommerce AJAX |
+| **HTTP Method** | `POST` | `POST` | `POST` | `POST` | `POST` |
+| **Payload Schema** | `{"security": nonce, "coupon_code": code, "billing_email": ""}` | `{"discount_code": code, "nonce": nonce}` | `{"action": "matat_mini_coupon_code", "coupon_code": code, "security": nonce}` | `{"security": nonce, "coupon_code": code, "billing_email": ""}` | `{"security": nonce, "coupon_code": code}` |
+| **Response Format** | HTML (`.woocommerce-message`, `.woocommerce-error`) | JSON (`{"status": true, "code": 200, ...}`) | JSON or raw literal string `'0'` | HTML (`.woocommerce-message`, `.woocommerce-error`) | HTML (`.woocommerce-message`, `.woocommerce-error`) |
+| **Response Quirks** | Returns HTTP 200 with HTML message on both success and error | Returns HTTP 200 for applied, HTTP 400 for invalid/already applied | Returns `'0'` when coupon is already active in user session cart | Returns HTTP 200 with `הקופון פג תוקף` for expired database entries | Returns HTTP 200 with product restriction error for conditional coupons |
+| **Baseline Test Codes** | `["Welcome5", "welcome7"]` | `["new30", "welcome5", "dasd"]` | `["welcome5", "dasd"]` | `["spring10", "dasd"]` | `["corrin", "dasd"]` |
+| **Verified Live Hits** | `talron50`, `welcome5` | `new30` (30% off), `welcome5` (5% off) | `welcome5` (Active in cart) | `spring10`, `spring15` (Expired database hits) | `corrin` (Active in cart), `corrin20`, `corrin50` |
+| **Niche Vocabulary** | Automotive, mechanics, garage tools | Perfumes, luxury scents, cosmetics | Luxury watches, jewelry, rings | Fashion, footwear, shoes, handbags | Robotic vacuums, cleaners, washers, mops |
 
 ---
 
@@ -211,16 +213,28 @@ uv run python main.py --retailer orlando --nonce 6d5c7725da --limit 50 --stack-t
 uv run python main.py --limit 100 --concurrency 10
 ```
 
-### 6. Nightly Multi-Retailer Pipeline (Multi-Hour Resilient Assessment)
+### 6. Bobot Assessment (Cleaning & Robotic Vacuums)
+```bash
+# Standard assessment targeting Bobot Israel
+uv run python main.py --retailer bobot --concurrency 5 --jitter 100 300
 
-Executes all 33,000+ permutations across all registered retailers (`talron`, `orlando`, `ringer`, `spring`) with domain-isolated adaptive rate limiting (AIMD), TLS fingerprint rotation, proxy pool failover, retailer circuit breaker fault isolation, and SQLite checkpointing.
+# Custom nonce override and stacking verification
+uv run python main.py --retailer bobot --nonce 2ceec5b736 --limit 50 --stack-test
+
+# Target with custom session cookie from browser DevTools
+uv run python main.py --retailer bobot --cookie "woocommerce_items_in_cart=1; ..."
+```
+
+### 7. Nightly Multi-Retailer Pipeline (Multi-Hour Resilient Assessment)
+
+Executes all 33,000+ permutations across all registered retailers (`talron`, `orlando`, `ringer`, `spring`, `bobot`) with domain-isolated adaptive rate limiting (AIMD), TLS fingerprint rotation, proxy pool failover, retailer circuit breaker fault isolation, and SQLite checkpointing.
 
 ```bash
 # Full multi-retailer nightly run across all registered stores (default: all permutations)
 uv run python main.py nightly
 
 # Target specific retailers with custom concurrency and safe rate limits
-uv run python main.py nightly --retailers talron,orlando --concurrency 5 --rate-limit 6.0
+uv run python main.py nightly --retailers talron,orlando,bobot --concurrency 5 --rate-limit 6.0
 
 # Nightly run with external rotating proxy pool
 uv run python main.py nightly --proxies proxies.txt
@@ -229,7 +243,7 @@ uv run python main.py nightly --proxies proxies.txt
 uv run python main.py nightly --resume
 
 # Fast bounded smoke test run
-uv run python main.py nightly --retailers talron,orlando --limit 10
+uv run python main.py nightly --retailers talron,bobot --limit 10
 
 # Run via dedicated nightly module
 uv run python nightly.py --retailers all --concurrency 5
@@ -237,17 +251,17 @@ uv run python nightly.py --retailers all --concurrency 5
 
 ---
 
-## 7. CLI Command-Line Reference
+## 8. CLI Command-Line Reference
 
 
 ```text
-usage: main.py [-h] [--retailer {talron,orlando,ringer,ringers,spring,avivs,aviv}]
+usage: main.py [-h] [--retailer {talron,orlando,ringer,ringers,spring,avivs,aviv,bobot,bobot-israel,bobotisrael}]
                [--concurrency CONCURRENCY] [--jitter JITTER JITTER] [--leetspeak]
                [--wordlist WORDLIST] [--stack-test | --no-stack-test] [--limit LIMIT]
                [--nonce NONCE] [--cookie COOKIE] [--url URL]
 
 Options:
-  --retailer {talron,orlando,ringer,ringers,spring,avivs,aviv}
+  --retailer {talron,orlando,ringer,ringers,spring,avivs,aviv,bobot,bobot-israel,bobotisrael}
                                Target retailer strategy (default: talron)
   --concurrency CONCURRENCY    Number of concurrent HTTP workers (default: 15)
   --jitter MIN MAX             Jitter delay in milliseconds (default: 10 40)
@@ -263,7 +277,7 @@ Options:
 
 ---
 
-## 8. Response Triage Reference Table
+## 9. Response Triage Reference Table
 
 | Status (`TriageStatus`) | Meaning | Impact / Next Action |
 |---|---|---|

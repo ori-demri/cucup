@@ -1,6 +1,6 @@
 import json
 from models import TriageStatus
-from strategies import get_retailer_strategy, TalronStrategy, OrlandoStrategy
+from strategies import get_retailer_strategy, TalronStrategy, OrlandoStrategy, BobotStrategy
 from wordlist import WordlistEngine
 
 
@@ -15,6 +15,12 @@ def test_strategy_factory():
     assert orlando.name == "orlando"
     assert "orlando.co.il" in orlando.target_url
     assert "fkcart_apply_coupon" in orlando.target_url
+
+    bobot = get_retailer_strategy("bobot")
+    assert isinstance(bobot, BobotStrategy)
+    assert bobot.name == "bobot"
+    assert "bobot-israel.com" in bobot.target_url
+    assert "apply_coupon" in bobot.target_url
     print("[PASS] Strategy factory tests passed.")
 
 
@@ -32,6 +38,13 @@ def test_payload_builder():
     assert o_payload == {
         "discount_code": "CODE2",
         "nonce": "nonce456",
+    }
+
+    bobot = BobotStrategy()
+    b_payload = bobot.build_payload("CODE3", "nonce789")
+    assert b_payload == {
+        "security": "nonce789",
+        "coupon_code": "CODE3",
     }
     print("[PASS] Payload builder tests passed.")
 
@@ -148,6 +161,54 @@ def test_spring_triage():
     print("[PASS] Spring triage tests passed.")
 
 
+def test_bobot_triage():
+    from strategies.bobot import BobotStrategy
+    bobot = BobotStrategy()
+
+    # Success HTML
+    success_html = '<div class="woocommerce-message">קוד הקופון הוחל בהצלחה.</div>'
+    valid, status, msg = bobot.triage_response(success_html, 200)
+    assert valid is True
+    assert status == TriageStatus.APPLIED
+
+    # Restricted / Conditional code (live observed response for 'corrin')
+    restricted_html = (
+        '<ul class="woocommerce-error" role="alert">'
+        '<li>מצטערים, לא ניתן להחיל את הקופון &quot;corrin&quot; על כל המוצרים שנבחרו.</li>'
+        '</ul>'
+    )
+    valid, status, msg = bobot.triage_response(restricted_html, 200)
+    assert valid is True
+    assert status == TriageStatus.RESTRICTED
+    assert "corrin" in msg
+
+    # Already applied
+    already_html = (
+        '<ul class="woocommerce-error" role="alert">'
+        '<li>קוד הקופון &quot;corrin&quot; כבר הוחל!</li>'
+        '</ul>'
+    )
+    valid, status, msg = bobot.triage_response(already_html, 200)
+    assert valid is True
+    assert status == TriageStatus.ALREADY_APPLIED
+
+    # Invalid code (live observed response for non-existent coupon)
+    invalid_html = (
+        '<ul class="woocommerce-error" role="alert">'
+        '<li>לא ניתן לממש את הקופון &quot;fake&quot; מאחר שהוא לא קיים.</li>'
+        '</ul>'
+    )
+    valid, status, msg = bobot.triage_response(invalid_html, 200)
+    assert valid is False
+    assert status == TriageStatus.INVALID
+
+    # Nonce expired / 403
+    valid, status, msg = bobot.triage_response("-1", 403)
+    assert valid is False
+    assert status == TriageStatus.EXPIRED_NONCE
+    print("[PASS] Bobot triage tests passed.")
+
+
 def test_wordlists():
     talron = TalronStrategy()
     t_words = WordlistEngine.generate_candidates(strategy=talron)
@@ -190,6 +251,18 @@ def test_wordlists():
     assert any("shoes" in w for w in s_words)
     assert any("נעליים" in w for w in s_words)
 
+    # Bobot wordlist test
+    bobot = get_retailer_strategy("bobot")
+    b_words = WordlistEngine.generate_candidates(strategy=bobot)
+    assert "corrin" in b_words
+    assert "corrin10" in b_words
+    assert "bobot" in b_words
+    assert "bobot10" in b_words
+    assert "בובוט" in b_words
+    assert any("clean" in w for w in b_words)
+    assert any("שואב" in w for w in b_words)
+    assert "corrin" in bobot.baseline_candidates
+
     # Assert sale10, 20, 30, 40, 50 presence across default and all retailer candidates
     for p in [10, 20, 30, 40, 50]:
         assert f"sale{p}" in default_words, f"sale{p} missing from default candidates"
@@ -197,6 +270,7 @@ def test_wordlists():
         assert f"sale{p}" in o_words, f"sale{p} missing from Orlando candidates"
         assert f"sale{p}" in r_words, f"sale{p} missing from Ringer candidates"
         assert f"sale{p}" in s_words, f"sale{p} missing from Spring candidates"
+        assert f"sale{p}" in b_words, f"sale{p} missing from Bobot candidates"
 
     # Assert user-specified priority patterns: {num}off, test{num}, save{num}
     for p in [10, 15, 20]:
@@ -277,7 +351,7 @@ def test_wordlists():
         f"admin={idx_admin}, turkey={idx_turkey}, passover={idx_passover}"
     )
 
-    print(f"[PASS] Wordlist generation tests passed (Talron: {len(t_words)}, Orlando: {len(o_words)}, Ringer: {len(r_words)}, Spring: {len(s_words)}, Default: {len(default_words)}).")
+    print(f"[PASS] Wordlist generation tests passed (Talron: {len(t_words)}, Orlando: {len(o_words)}, Ringer: {len(r_words)}, Spring: {len(s_words)}, Bobot: {len(b_words)}, Default: {len(default_words)}).")
 
 
 if __name__ == "__main__":
@@ -287,5 +361,6 @@ if __name__ == "__main__":
     test_talron_triage()
     test_ringer_triage()
     test_spring_triage()
+    test_bobot_triage()
     test_wordlists()
     print("\nAll unit tests passed successfully!")

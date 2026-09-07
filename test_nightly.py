@@ -164,7 +164,7 @@ def test_checkpoint_store():
 
 def test_canonical_retailers():
     canonical = NightlyPipeline.get_canonical_retailers()
-    assert set(canonical) == {"talron", "orlando", "ringer", "spring"}
+    assert set(canonical) == {"talron", "orlando", "ringer", "spring", "bobot"}
     print(f"[PASS] Canonical retailers resolved: {canonical}")
 
 

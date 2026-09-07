@@ -19,6 +19,7 @@ from strategies import (
     TalronStrategy,
     RingerStrategy,
     SpringStrategy,
+    BobotStrategy,
     RETAILER_REGISTRY,
     get_retailer_strategy,
 )

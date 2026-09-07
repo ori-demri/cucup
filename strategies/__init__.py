@@ -3,6 +3,7 @@ from strategies.talron import TalronStrategy
 from strategies.orlando import OrlandoStrategy
 from strategies.ringer import RingerStrategy
 from strategies.spring import SpringStrategy
+from strategies.bobot import BobotStrategy
 
 
 RETAILER_REGISTRY: dict[str, type[BaseRetailerStrategy]] = {
@@ -13,6 +14,9 @@ RETAILER_REGISTRY: dict[str, type[BaseRetailerStrategy]] = {
     "spring": SpringStrategy,
     "avivs": SpringStrategy,
     "aviv": SpringStrategy,
+    "bobot": BobotStrategy,
+    "bobot-israel": BobotStrategy,
+    "bobotisrael": BobotStrategy,
 }
 
 
@@ -32,6 +36,7 @@ __all__ = [
     "OrlandoStrategy",
     "RingerStrategy",
     "SpringStrategy",
+    "BobotStrategy",
     "RETAILER_REGISTRY",
     "get_retailer_strategy",
 ]
