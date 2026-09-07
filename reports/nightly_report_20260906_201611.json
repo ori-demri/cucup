@@ -1,0 +1,59 @@
+{
+  "execution_date": "2026-09-06T20:16:11.915643+00:00",
+  "total_runtime_seconds": 0.05,
+  "total_retailers": 2,
+  "retailers": {
+    "talron": {
+      "tested": 3,
+      "total": 3,
+      "valid_hits": 2,
+      "rate_limited_429": 0,
+      "network_errors": 0,
+      "status": "COMPLETED",
+      "findings": [
+        {
+          "code": "talron50",
+          "status": "ALREADY_APPLIED",
+          "message": "קוד הקופון \"talron50\" כבר הוחל!",
+          "http_status": 200,
+          "response_time_ms": 857.39,
+          "timestamp": "2026-09-06T20:16:06.261946+00:00"
+        },
+        {
+          "code": "welcome5",
+          "status": "ALREADY_APPLIED",
+          "message": "קוד הקופון \"welcome5\" כבר הוחל!",
+          "http_status": 200,
+          "response_time_ms": 876.98,
+          "timestamp": "2026-09-06T20:16:06.302639+00:00"
+        }
+      ]
+    },
+    "orlando": {
+      "tested": 3,
+      "total": 3,
+      "valid_hits": 2,
+      "rate_limited_429": 0,
+      "network_errors": 0,
+      "status": "COMPLETED",
+      "findings": [
+        {
+          "code": "new30",
+          "status": "ALREADY_APPLIED",
+          "message": "קוד הקופון \"new30\" כבר הוחל!",
+          "http_status": 200,
+          "response_time_ms": 1690.77,
+          "timestamp": "2026-09-06T20:16:07.114337+00:00"
+        },
+        {
+          "code": "welcome5",
+          "status": "ALREADY_APPLIED",
+          "message": "קוד הקופון \"welcome5\" כבר הוחל!",
+          "http_status": 200,
+          "response_time_ms": 1836.57,
+          "timestamp": "2026-09-06T20:16:07.326696+00:00"
+        }
+      ]
+    }
+  }
+}

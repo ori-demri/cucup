@@ -1,0 +1,6 @@
+{"timestamp": "2026-09-06 23:15:41,048", "level": "WARNING", "logger": "nightly_pipeline", "message": {"event": "proxy_penalized", "proxy": "http://proxy1:8080", "failures": 2, "cooldown_sec": 10.0}}
+{"timestamp": "2026-09-06 23:15:41,050", "level": "WARNING", "logger": "nightly_pipeline", "message": {"event": "aimd_throttle", "reason": "rate_limited", "new_rps": 5.0}}
+{"timestamp": "2026-09-06 23:15:41,050", "level": "WARNING", "logger": "nightly_pipeline", "message": {"event": "aimd_throttle", "reason": "rate_limited", "new_rps": 2.5}}
+{"timestamp": "2026-09-06 23:15:41,050", "level": "WARNING", "logger": "nightly_pipeline", "message": {"event": "aimd_throttle", "reason": "rate_limited", "new_rps": 2.0}}
+{"timestamp": "2026-09-06 23:15:41,066", "level": "ERROR", "logger": "nightly_pipeline", "message": {"event": "circuit_breaker_tripped", "retailer": "test_retailer", "reason": "timeout 3", "consecutive_failures": 3}}
+{"timestamp": "2026-09-06 23:15:41,317", "level": "INFO", "logger": "nightly_pipeline", "message": [CIRCUIT BREAKER] Half-open probe window active for 'test_retailer'}

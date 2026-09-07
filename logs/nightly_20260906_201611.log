@@ -1,0 +1,16 @@
+{"timestamp": "2026-09-06 23:16:11,878", "level": "INFO", "logger": "nightly_pipeline", "message": Execution Started     : 2026-09-06 20:16:11 UTC}
+{"timestamp": "2026-09-06 23:16:11,878", "level": "INFO", "logger": "nightly_pipeline", "message": Target Retailers      : talron, orlando}
+{"timestamp": "2026-09-06 23:16:11,878", "level": "INFO", "logger": "nightly_pipeline", "message": Worker Concurrency    : 5 workers/target}
+{"timestamp": "2026-09-06 23:16:11,878", "level": "INFO", "logger": "nightly_pipeline", "message": Domain Rate Limit     : 6.0 req/s per target}
+{"timestamp": "2026-09-06 23:16:11,894", "level": "INFO", "logger": "nightly_pipeline", "message": Checkpoint Database   : test_smoke_checkpoint.db (Resume: True)}
+{"timestamp": "2026-09-06 23:16:11,894", "level": "INFO", "logger": "nightly_pipeline", "message": Proxy Pool Status     : 0 active proxies
+}
+{"timestamp": "2026-09-06 23:16:11,894", "level": "INFO", "logger": "nightly_pipeline", "message": [*] Starting Pipeline Worker for: Talron (talron)}
+{"timestamp": "2026-09-06 23:16:11,904", "level": "INFO", "logger": "nightly_pipeline", "message": [talron] Total Permutations: 3 | Cached: 3 | Remaining to Test: 0}
+{"timestamp": "2026-09-06 23:16:11,904", "level": "INFO", "logger": "nightly_pipeline", "message": [talron] All permutations already tested in previous checkpoint. Skipping.}
+{"timestamp": "2026-09-06 23:16:11,904", "level": "INFO", "logger": "nightly_pipeline", "message": [*] Starting Pipeline Worker for: Orlando (orlando)}
+{"timestamp": "2026-09-06 23:16:11,915", "level": "INFO", "logger": "nightly_pipeline", "message": [orlando] Total Permutations: 3 | Cached: 3 | Remaining to Test: 0}
+{"timestamp": "2026-09-06 23:16:11,915", "level": "INFO", "logger": "nightly_pipeline", "message": [orlando] All permutations already tested in previous checkpoint. Skipping.}
+{"timestamp": "2026-09-06 23:16:11,917", "level": "INFO", "logger": "nightly_pipeline", "message": [+] Nightly reports generated successfully:
+    - reports\nightly_report_20260906_201611.md
+    - reports\nightly_report_20260906_201611.json}
