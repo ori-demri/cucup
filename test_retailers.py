@@ -1,6 +1,6 @@
 import json
 from models import TriageStatus
-from strategies import get_retailer_strategy, TalronStrategy, OrlandoStrategy, BobotStrategy
+from strategies import get_retailer_strategy, TalronStrategy, OrlandoStrategy, BobotStrategy, SabonMichalStrategy, LavidoStrategy
 from wordlist import WordlistEngine
 
 
@@ -21,6 +21,19 @@ def test_strategy_factory():
     assert bobot.name == "bobot"
     assert "bobot-israel.com" in bobot.target_url
     assert "apply_coupon" in bobot.target_url
+
+    sabon = get_retailer_strategy("sabonmichal")
+    assert isinstance(sabon, SabonMichalStrategy)
+    assert sabon.name == "sabonmichal"
+    assert "sabonmichal.co.il" in sabon.target_url
+    assert "apply_coupon" in sabon.target_url
+
+    lavido = get_retailer_strategy("lavido")
+    assert isinstance(lavido, LavidoStrategy)
+    assert lavido.name == "lavido"
+    assert "lavido.co.il" in lavido.target_url
+    assert "admin-ajax.php" in lavido.target_url
+    
     print("[PASS] Strategy factory tests passed.")
 
 
@@ -209,6 +222,72 @@ def test_bobot_triage():
     print("[PASS] Bobot triage tests passed.")
 
 
+def test_sabonmichal_triage():
+    from strategies.sabonmichal import SabonMichalStrategy
+    sabon = SabonMichalStrategy()
+
+    # Success HTML
+    success_html = '<div class="woocommerce-message">קוד הקופון הוחל בהצלחה.</div>'
+    valid, status, msg = sabon.triage_response(success_html, 200)
+    assert valid is True
+    assert status == TriageStatus.APPLIED
+
+    # Invalid code
+    invalid_html = (
+        '<ul class="woocommerce-error" role="alert">'
+        '<li>לא ניתן לממש את הקופון &quot;erokdas&quot; מאחר שהוא לא קיים.</li>'
+        '</ul>'
+    )
+    valid, status, msg = sabon.triage_response(invalid_html, 200)
+    assert valid is False
+    assert status == TriageStatus.INVALID
+
+    # Already applied
+    already_html = (
+        '<ul class="woocommerce-error" role="alert">'
+        '<li>קוד הקופון כבר הוחל!</li>'
+        '</ul>'
+    )
+    valid, status, msg = sabon.triage_response(already_html, 200)
+    assert valid is True
+    assert status == TriageStatus.ALREADY_APPLIED
+
+    # Nonce expired / 403
+    valid, status, msg = sabon.triage_response("-1", 403)
+    assert valid is False
+    assert status == TriageStatus.EXPIRED_NONCE
+    print("[PASS] SabonMichal triage tests passed.")
+
+
+def test_lavido_triage():
+    from strategies.lavido import LavidoStrategy
+    lavido = LavidoStrategy()
+
+    # Success JSON
+    success_json = '{"error":false,"message":"\u05e7\u05d5\u05d3 \u05d4\u05e7\u05d5\u05e4\u05d5\u05df \u05d4\u05d5\u05d7\u05dc \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4."}'
+    valid, status, msg = lavido.triage_response(success_json, 200)
+    assert valid is True
+    assert status == TriageStatus.APPLIED
+
+    # Invalid code
+    invalid_json = '{"error":true,"error_message":"\u05e7\u05d5\u05d3 \u05e9\u05d4\u05d6\u05e0\u05ea \u05dc\u05d0 \u05ea\u05e7\u05d9\u05df "}'
+    valid, status, msg = lavido.triage_response(invalid_json, 200)
+    assert valid is False
+    assert status == TriageStatus.INVALID
+
+    # Already applied
+    already_json = '{"error":true,"error_message":"\u05e7\u05d5\u05d3 \u05e7\u05d5\u05e4\u05d5\u05df \u05d6\u05d4 \u05db\u05d1\u05e8 \u05d4\u05d5\u05d7\u05dc!"}'
+    valid, status, msg = lavido.triage_response(already_json, 200)
+    assert valid is True
+    assert status == TriageStatus.ALREADY_APPLIED
+
+    # Nonce expired
+    valid, status, msg = lavido.triage_response("-1", 200)
+    assert valid is False
+    assert status == TriageStatus.EXPIRED_NONCE
+    print("[PASS] Lavido triage tests passed.")
+
+
 def test_wordlists():
     talron = TalronStrategy()
     t_words = WordlistEngine.generate_candidates(strategy=talron)
@@ -362,5 +441,7 @@ if __name__ == "__main__":
     test_ringer_triage()
     test_spring_triage()
     test_bobot_triage()
+    test_sabonmichal_triage()
+    test_lavido_triage()
     test_wordlists()
     print("\nAll unit tests passed successfully!")

@@ -4,6 +4,8 @@ from strategies.orlando import OrlandoStrategy
 from strategies.ringer import RingerStrategy
 from strategies.spring import SpringStrategy
 from strategies.bobot import BobotStrategy
+from strategies.sabonmichal import SabonMichalStrategy
+from strategies.lavido import LavidoStrategy
 
 
 RETAILER_REGISTRY: dict[str, type[BaseRetailerStrategy]] = {
@@ -17,6 +19,9 @@ RETAILER_REGISTRY: dict[str, type[BaseRetailerStrategy]] = {
     "bobot": BobotStrategy,
     "bobot-israel": BobotStrategy,
     "bobotisrael": BobotStrategy,
+    "sabonmichal": SabonMichalStrategy,
+    "sabon": SabonMichalStrategy,
+    "lavido": LavidoStrategy,
 }
 
 
@@ -37,6 +42,8 @@ __all__ = [
     "RingerStrategy",
     "SpringStrategy",
     "BobotStrategy",
+    "SabonMichalStrategy",
+    "LavidoStrategy",
     "RETAILER_REGISTRY",
     "get_retailer_strategy",
 ]

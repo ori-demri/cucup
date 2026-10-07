@@ -551,6 +551,9 @@ class WordlistEngine:
             for p in core_nums:
                 raw_candidates.append(f"{n}{p}")
                 raw_candidates.append(f"{n}-{p}")
+            for y in all_years:
+                raw_candidates.append(f"{n}{y}")
+                raw_candidates.append(f"{n}-{y}")
 
         # ======================================================================
         # 25. Standard E-Commerce Discount Affixes
